@@ -1,7 +1,8 @@
 [package]
 name = "life"
 version = "0.1.0"
-authors = ["Mack Stump <mack.stump@gmail.com>"]
+authors = ["Mack Stump <mack.stump@gmail.com>",
+           "Shaun Donachy <donachys@gmail.com>"]
 
 [dependencies]
 termion = "1.5"
