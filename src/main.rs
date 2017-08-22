@@ -1,19 +1,27 @@
 extern crate termion;
 
 use std::io::Write;
+use std::sync::mpsc::{channel, Receiver};
 use termion::input::{TermRead, MouseTerminal};
 use termion::raw::IntoRawMode;
 use termion::event::{Event, Key, MouseEvent};
+
+enum SimulationEvent {
+    QUIT,
+    PLAYPAUSE,
+    DRAW(u16, u16)
+}
 
 struct Simulation {
     running: bool,
     term_width: u16,
     term_height: u16,
-    cells: Vec<Vec<Cell>>
+    cells: Vec<Vec<Cell>>,
+    input_rx: Receiver<SimulationEvent>
 }
 
 impl Simulation {
-    fn new() -> Self {
+    fn new(input_rx: Receiver<SimulationEvent>) -> Self {
         let (width, height) = termion::terminal_size().unwrap();
         let mut cells = Vec::with_capacity(height as usize);
         for _ in 0..height {
@@ -30,19 +38,32 @@ impl Simulation {
             running: false,
             term_width: width,
             term_height: height,
-            cells: cells
+            cells: cells,
+            input_rx: input_rx
         }
     }
 
-    fn pause(&mut self) {
-        self.running = false;
-    }
-
-    fn resume(&mut self) {
-        self.running = true;
-
+    fn run(&mut self) {
         loop {
-            self.tick();
+            if self.running {
+                self.tick();
+            }
+
+            for event in self.input_rx.try_iter() {
+                match event {
+                    SimulationEvent::QUIT => return,
+                    SimulationEvent::PLAYPAUSE => self.running = !self.running,
+                    SimulationEvent::DRAW(x, y) => {
+                        if self.cells[(y-1) as usize][(x-1) as usize].state == CellState::DEAD {
+                            self.cells[(y-1) as usize][(x-1) as usize].state = CellState::ALIVE;
+                            print!("{}{}", termion::cursor::Goto(x, y), 'o');
+                        } else {
+                            self.cells[(y-1) as usize][(x-1) as usize].state = CellState::DEAD;
+                            print!("{}{}", termion::cursor::Goto(x, y), ' ');
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -119,40 +140,39 @@ fn main() {
            termion::cursor::Hide).unwrap();
     stdout.flush().unwrap();
 
-    let mut simulation = Simulation::new();
-    let stdin = std::io::stdin();
-    for event in stdin.events() {
-        let event = event.unwrap();
-        match event {
-            Event::Key(Key::Char(' ')) => { // toggle simulation pause/resume
-                if simulation.running {
-                    simulation.pause();
-                } else {
-                    simulation.resume();
+    let (event_tx, event_rx) = channel();
+    let mut simulation = Simulation::new(event_rx);
+
+    std::thread::spawn(move || {
+        let stdin = std::io::stdin();
+        for event in stdin.events() {
+            let event = event.unwrap();
+            match event {
+                Event::Key(Key::Char(' ')) => { // toggle simulation pause/resume
+                    event_tx.send(SimulationEvent::PLAYPAUSE).unwrap();
                 }
+
+                Event::Mouse(MouseEvent::Press(_, x, y)) |
+                Event::Mouse(MouseEvent::Hold(x, y)) => {
+                    event_tx.send(SimulationEvent::DRAW(x, y)).unwrap();
+                }
+
+                Event::Key(Key::Char('q')) |
+                Event::Key(Key::Esc) => {
+                    event_tx.send(SimulationEvent::QUIT).unwrap();
+                    break;
+                }
+
+                _ => {}
             }
 
-            Event::Mouse(MouseEvent::Press(_, x, y)) |
-            Event::Mouse(MouseEvent::Hold(x, y)) => {
-                if simulation.cells[(y-1) as usize][(x-1) as usize].state == CellState::DEAD {
-                    simulation.cells[(y-1) as usize][(x-1) as usize].state = CellState::ALIVE;
-                    write!(stdout, "{}{}", termion::cursor::Goto(x, y), 'o').unwrap();
-                } else {
-                    simulation.cells[(y-1) as usize][(x-1) as usize].state = CellState::DEAD;
-                    write!(stdout, "{}{}", termion::cursor::Goto(x, y), ' ').unwrap();
-                }
-            }
-
-            Event::Key(Key::Char('q')) |
-            Event::Key(Key::Esc) => { break }
-
-            _ => {}
+            stdout.flush().unwrap();
         }
+    });
 
-        stdout.flush().unwrap();
-    }
+    simulation.run();
 
-    write!(stdout, "{}{}",
+    print!("{}{}",
            termion::screen::ToMainScreen,
-           termion::cursor::Show).unwrap();
+           termion::cursor::Show);
 }
