@@ -1,0 +1,1 @@
+![](https://github.com/rmbreak/life-rs/blob/master/demo.gif)
