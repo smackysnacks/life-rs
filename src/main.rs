@@ -2,9 +2,9 @@ extern crate termion;
 
 use std::io::Write;
 use std::sync::mpsc::{channel, Receiver};
+use termion::event::{Event, Key, MouseEvent};
 use termion::input::{MouseTerminal, TermRead};
 use termion::raw::IntoRawMode;
-use termion::event::{Event, Key, MouseEvent};
 
 /// https://stackoverflow.com/questions/31210357/is-there-a-modulus-not-remainder-function-operation
 /// Modulo that handles negative numbers, works the same as Python's `%`.
@@ -107,45 +107,49 @@ impl Simulation {
                 let s_term_width = self.term_width as i16;
                 if self.cells[(si - 1).modulo(s_term_height) as usize]
                     [(sj - 1).modulo(s_term_width) as usize]
-                    .old_state == CellState::ALIVE
+                    .old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[(si - 1).modulo(s_term_height) as usize][j].old_state ==
-                    CellState::ALIVE
+                if self.cells[(si - 1).modulo(s_term_height) as usize][j].old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
                 if self.cells[(si - 1).modulo(s_term_height) as usize]
                     [(sj + 1).modulo(s_term_width) as usize]
-                    .old_state == CellState::ALIVE
+                    .old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[i][(sj - 1).modulo(s_term_width) as usize].old_state ==
-                    CellState::ALIVE
+                if self.cells[i][(sj - 1).modulo(s_term_width) as usize].old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[i][(sj + 1).modulo(s_term_width) as usize].old_state ==
-                    CellState::ALIVE
+                if self.cells[i][(sj + 1).modulo(s_term_width) as usize].old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
                 if self.cells[(si + 1).modulo(s_term_height) as usize]
                     [(sj - 1).modulo(s_term_width) as usize]
-                    .old_state == CellState::ALIVE
+                    .old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[(si + 1).modulo(s_term_height) as usize][j].old_state ==
-                    CellState::ALIVE
+                if self.cells[(si + 1).modulo(s_term_height) as usize][j].old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
                 if self.cells[(si + 1).modulo(s_term_height) as usize]
                     [(sj + 1).modulo(s_term_width) as usize]
-                    .old_state == CellState::ALIVE
+                    .old_state
+                    == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
@@ -202,7 +206,8 @@ fn main() {
         termion::screen::ToAlternateScreen,
         termion::clear::All,
         termion::cursor::Hide
-    ).unwrap();
+    )
+    .unwrap();
     stdout.flush().unwrap();
 
     let (event_tx, event_rx) = channel();
