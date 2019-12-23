@@ -3,6 +3,7 @@ name = "life"
 version = "0.1.0"
 authors = ["Mack Stump <mack.stump@gmail.com>",
            "Shaun Donachy <donachys@gmail.com>"]
+edition = "2018"
 
 [dependencies]
 termion = "1.5.4"

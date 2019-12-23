@@ -6,26 +6,6 @@ use termion::event::{Event, Key, MouseEvent};
 use termion::input::{MouseTerminal, TermRead};
 use termion::raw::IntoRawMode;
 
-/// https://stackoverflow.com/questions/31210357/is-there-a-modulus-not-remainder-function-operation
-/// Modulo that handles negative numbers, works the same as Python's `%`.
-///
-/// eg: `(a + b).modulo(c)`
-///
-pub trait ModuloSignedExt {
-    fn modulo(&self, n: Self) -> Self;
-}
-macro_rules! modulo_signed_ext_impl {
-    ($($t:ty)*) => ($(
-        impl ModuloSignedExt for $t {
-            #[inline]
-            fn modulo(&self, n: Self) -> Self {
-                (self % n + n) % n
-            }
-        }
-    )*)
-}
-modulo_signed_ext_impl! { i8 i16 i32 i64 }
-
 enum SimulationEvent {
     QUIT,
     PLAYPAUSE,
@@ -61,8 +41,8 @@ impl Simulation {
             running: false,
             term_width: width,
             term_height: height,
-            cells: cells,
-            input_rx: input_rx,
+            cells,
+            input_rx,
         }
     }
 
@@ -105,49 +85,49 @@ impl Simulation {
                 let sj = j as i16;
                 let s_term_height = self.term_height as i16;
                 let s_term_width = self.term_width as i16;
-                if self.cells[(si - 1).modulo(s_term_height) as usize]
-                    [(sj - 1).modulo(s_term_width) as usize]
+                if self.cells[(si - 1).rem_euclid(s_term_height) as usize]
+                    [(sj - 1).rem_euclid(s_term_width) as usize]
                     .old_state
                     == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[(si - 1).modulo(s_term_height) as usize][j].old_state
+                if self.cells[(si - 1).rem_euclid(s_term_height) as usize][j].old_state
                     == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[(si - 1).modulo(s_term_height) as usize]
-                    [(sj + 1).modulo(s_term_width) as usize]
+                if self.cells[(si - 1).rem_euclid(s_term_height) as usize]
+                    [(sj + 1).rem_euclid(s_term_width) as usize]
                     .old_state
                     == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[i][(sj - 1).modulo(s_term_width) as usize].old_state
+                if self.cells[i][(sj - 1).rem_euclid(s_term_width) as usize].old_state
                     == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[i][(sj + 1).modulo(s_term_width) as usize].old_state
+                if self.cells[i][(sj + 1).rem_euclid(s_term_width) as usize].old_state
                     == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[(si + 1).modulo(s_term_height) as usize]
-                    [(sj - 1).modulo(s_term_width) as usize]
+                if self.cells[(si + 1).rem_euclid(s_term_height) as usize]
+                    [(sj - 1).rem_euclid(s_term_width) as usize]
                     .old_state
                     == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[(si + 1).modulo(s_term_height) as usize][j].old_state
+                if self.cells[(si + 1).rem_euclid(s_term_height) as usize][j].old_state
                     == CellState::ALIVE
                 {
                     neighbors += 1;
                 }
-                if self.cells[(si + 1).modulo(s_term_height) as usize]
-                    [(sj + 1).modulo(s_term_width) as usize]
+                if self.cells[(si + 1).rem_euclid(s_term_height) as usize]
+                    [(sj + 1).rem_euclid(s_term_width) as usize]
                     .old_state
                     == CellState::ALIVE
                 {
