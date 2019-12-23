@@ -5,4 +5,4 @@ authors = ["Mack Stump <mack.stump@gmail.com>",
            "Shaun Donachy <donachys@gmail.com>"]
 
 [dependencies]
-termion = "1.5"
+termion = "1.5.4"
